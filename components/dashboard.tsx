@@ -28,14 +28,16 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { AppLayout } from "@/components/app-layout"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useGetDashboard } from "@/hooks/useQueries/useGetDashboard"
 
 export function Dashboard() {
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
-  const [progressValues, setProgressValues] = useState({ automation: 78, response: 85, satisfaction: 94 })
   const [showAlertDetails, setShowAlertDetails] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+
+  // Buscar dados reais do dashboard
+  const { data: dashboardData, isLoading, isError, refetch, isFetching } = useGetDashboard()
 
   useEffect(() => {
     setMounted(true)
@@ -48,32 +50,13 @@ export function Dashboard() {
     checkMobile()
     window.addEventListener("resize", checkMobile)
 
-    // Simular mudanças aleatórias nos valores de progresso a cada 10 segundos
-    const interval = setInterval(() => {
-      setProgressValues({
-        automation: Math.min(100, Math.max(70, progressValues.automation + (Math.random() * 6 - 3))),
-        response: Math.min(100, Math.max(75, progressValues.response + (Math.random() * 6 - 3))),
-        satisfaction: Math.min(100, Math.max(85, progressValues.satisfaction + (Math.random() * 4 - 2))),
-      })
-    }, 10000)
-
     return () => {
-      clearInterval(interval)
       window.removeEventListener("resize", checkMobile)
     }
-  }, [progressValues])
+  }, [])
 
   const handleRefresh = () => {
-    setIsRefreshing(true)
-    setTimeout(() => {
-      setIsRefreshing(false)
-      // Simular atualização de dados
-      setProgressValues({
-        automation: Math.min(100, Math.max(70, progressValues.automation + (Math.random() * 10 - 5))),
-        response: Math.min(100, Math.max(75, progressValues.response + (Math.random() * 10 - 5))),
-        satisfaction: Math.min(100, Math.max(85, progressValues.satisfaction + (Math.random() * 8 - 4))),
-      })
-    }, 2000)
+    refetch()
   }
 
   const handleViewAlertDetails = () => {
@@ -259,9 +242,9 @@ export function Dashboard() {
                     size="sm"
                     className="h-8 text-xs border-[#D1D5DB] text-[#2E2E2E] hover:border-[#0088FF] hover:text-[#0088FF] transition-colors"
                     onClick={handleRefresh}
-                    disabled={isRefreshing}
+                    disabled={isFetching}
                   >
-                    <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? "animate-spin" : ""}`} />
+                    <RefreshCw className={`h-3 w-3 mr-1 ${isFetching ? "animate-spin" : ""}`} />
                     <span className="hidden sm:inline">Atualizar</span>
                   </Button>
                 </TooltipTrigger>
@@ -545,7 +528,7 @@ export function Dashboard() {
                       <span className="text-xs text-gray-600 line-clamp-1">Taxa de Automação</span>
                       <div className="text-right whitespace-nowrap">
                         <span className="text-xs font-medium text-gray-700">
-                          {Math.round(progressValues.automation)}%
+                          {dashboardData?.responseRate || 0}%
                         </span>
                         <span className="text-[10px] text-gray-500 ml-1">/ 85%</span>
                       </div>
@@ -554,7 +537,7 @@ export function Dashboard() {
                       <motion.div
                         className="h-full bg-gradient-to-r from-[#0088FF] to-[#0066CC]"
                         initial={{ width: 0 }}
-                        animate={{ width: `${progressValues.automation}%` }}
+                        animate={{ width: `${dashboardData?.responseRate || 0}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
                       />
                     </motion.div>
@@ -565,16 +548,16 @@ export function Dashboard() {
                       <span className="text-xs text-gray-600 line-clamp-1">Tempo de Resposta</span>
                       <div className="text-right whitespace-nowrap">
                         <span className="text-xs font-medium text-gray-700">
-                          {Math.round(progressValues.response)}%
+                          {dashboardData?.averageResponseTime || 0}h
                         </span>
-                        <span className="text-[10px] text-gray-500 ml-1">/ 90%</span>
+                        <span className="text-[10px] text-gray-500 ml-1">/ 2h</span>
                       </div>
                     </div>
                     <motion.div className="h-1.5 bg-gray-100 rounded-full overflow-hidden" whileHover={{ scale: 1.01 }}>
                       <motion.div
                         className="h-full bg-gradient-to-r from-green-400 to-green-500"
                         initial={{ width: 0 }}
-                        animate={{ width: `${progressValues.response}%` }}
+                        animate={{ width: `${Math.min(100, ((2 - (dashboardData?.averageResponseTime || 2)) / 2) * 100)}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
                       />
                     </motion.div>
@@ -585,7 +568,7 @@ export function Dashboard() {
                       <span className="text-xs text-gray-600 line-clamp-1">Satisfação do Cliente</span>
                       <div className="text-right whitespace-nowrap">
                         <span className="text-xs font-medium text-gray-700">
-                          {Math.round(progressValues.satisfaction)}%
+                          95%
                         </span>
                         <span className="text-[10px] text-gray-500 ml-1">/ 95%</span>
                       </div>
@@ -594,7 +577,7 @@ export function Dashboard() {
                       <motion.div
                         className="h-full bg-gradient-to-r from-purple-400 to-purple-500"
                         initial={{ width: 0 }}
-                        animate={{ width: `${progressValues.satisfaction}%` }}
+                        animate={{ width: "95%" }}
                         transition={{ duration: 1, ease: "easeOut" }}
                       />
                     </motion.div>
