@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Filter, X, Star } from "lucide-react"
+import { Search, Filter, X, Star, RefreshCw } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -13,6 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
+import { useGetEmails } from "@/hooks/useQueries/useGetEmails"
+import { useUpdateEmail } from "@/hooks/useMutations/useUpdateEmail"
 import type { Email } from "@/types/email"
 
 // Simulação da base de conhecimento
@@ -287,8 +289,7 @@ const getArchivedFromStorage = () => {
 
 export function EmailsPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [emails, setEmails] = useState<Email[]>([])
-  const [archived, setArchived] = useState<Email[]>([])
+  const [activeTab, setActiveTab] = useState("todos")
   const [filters, setFilters] = useState({
     dateRange: "today",
     status: {
@@ -302,61 +303,31 @@ export function EmailsPage() {
   })
   const router = useRouter()
 
-  // Inicializar localStorage e carregar e-mails quando o componente montar
-  useEffect(() => {
-    initializeLocalStorage()
-    loadEmails()
-  }, [])
+  // Buscar emails da API
+  const { 
+    data: emails = [], 
+    isLoading, 
+    isError, 
+    refetch,
+    isFetching 
+  } = useGetEmails({
+    ...(activeTab !== "todos" && activeTab !== "arquivados" && { status: activeTab }),
+    limit: 100
+  })
 
-  // Função para carregar e-mails do localStorage
-  const loadEmails = () => {
-    try {
-      // Obter e-mails do localStorage
-      const storedEmails = getEmailsFromStorage()
-      const storedArchived = getArchivedFromStorage()
-
-      // Converter datas de string para Date
-      const emailsWithDates = storedEmails.map((email: any) => ({
-        ...email,
-        date: new Date(email.date),
-        actions: email.actions.map((action: any) => ({
-          ...action,
-          timestamp: new Date(action.timestamp),
-        })),
-      }))
-
-      const archivedWithDates = storedArchived.map((email: any) => ({
-        ...email,
-        date: new Date(email.date),
-        actions: email.actions.map((action: any) => ({
-          ...action,
-          timestamp: new Date(action.timestamp),
-        })),
-      }))
-
-      setEmails(emailsWithDates)
-      setArchived(archivedWithDates)
-
-      console.log("📧 E-mails carregados do localStorage:", emailsWithDates.length)
-    } catch (error) {
-      console.error("Erro ao carregar e-mails do localStorage:", error)
-      // Fallback para os dados mock
-      setEmails(mockEmails)
-      setArchived(archivedEmails)
-    }
-  }
+  // Hook para atualizar emails
+  const updateEmailMutation = useUpdateEmail()
 
   const getEmailsByStatus = (status: string) => {
-    let emailList = status === "arquivados" ? archived : emails
+    let emailList = emails
 
     // Aplicar filtros
     if (filters.favorites) {
-      emailList = emailList.filter((email) => email.isFavorite)
+      emailList = emailList.filter((email: any) => email.isFavorite)
     }
 
     if (status === "todos") return emailList
-    if (status === "arquivados") return emailList
-    return emailList.filter((email) => email.status === status)
+    return emailList.filter((email: any) => email.status === status)
   }
 
   const getTabCount = (status: string) => {
@@ -370,68 +341,29 @@ export function EmailsPage() {
   }
 
   const handleFavorite = (emailId: string) => {
-    // Atualizar o estado de favorito do e-mail
-    const updatedEmails = emails.map((email) => {
-      if (email.id === emailId) {
-        const newFavoriteState = !email.isFavorite
-        const updatedEmail = { ...email, isFavorite: newFavoriteState }
+    const email = emails.find((e: any) => e.id === emailId)
+    if (!email) return
 
-        // Atualizar no localStorage
-        try {
-          const storedEmails = getEmailsFromStorage()
-          const updatedStoredEmails = storedEmails.map((e: any) =>
-            e.id === emailId ? { ...e, isFavorite: newFavoriteState } : e,
-          )
-          localStorage.setItem("inboxpilot_emails", JSON.stringify(updatedStoredEmails))
-        } catch (error) {
-          console.error("Erro ao atualizar e-mail no localStorage:", error)
-        }
-
+    updateEmailMutation.mutate({
+      id: emailId,
+      data: { isStarred: !email.isStarred }
+    }, {
+      onSuccess: () => {
         toast({
-          title: newFavoriteState ? "E-mail favoritado" : "E-mail desfavoritado",
-          description: newFavoriteState
+          title: !email.isStarred ? "E-mail favoritado" : "E-mail desfavoritado",
+          description: !email.isStarred
             ? "O e-mail foi adicionado aos favoritos."
             : "O e-mail foi removido dos favoritos.",
-          duration: 3000,
         })
-
-        return updatedEmail
-      }
-      return email
-    })
-
-    // Também verificar nos arquivados
-    const updatedArchived = archived.map((email) => {
-      if (email.id === emailId) {
-        const newFavoriteState = !email.isFavorite
-        const updatedEmail = { ...email, isFavorite: newFavoriteState }
-
-        // Atualizar no localStorage
-        try {
-          const storedArchived = getArchivedFromStorage()
-          const updatedStoredArchived = storedArchived.map((e: any) =>
-            e.id === emailId ? { ...e, isFavorite: newFavoriteState } : e,
-          )
-          localStorage.setItem("inboxpilot_archived", JSON.stringify(updatedStoredArchived))
-        } catch (error) {
-          console.error("Erro ao atualizar e-mail arquivado no localStorage:", error)
-        }
-
+      },
+      onError: () => {
         toast({
-          title: newFavoriteState ? "E-mail favoritado" : "E-mail desfavoritado",
-          description: newFavoriteState
-            ? "O e-mail foi adicionado aos favoritos."
-            : "O e-mail foi removido dos favoritos.",
-          duration: 3000,
+          title: "Erro",
+          description: "Não foi possível atualizar o e-mail.",
+          variant: "destructive",
         })
-
-        return updatedEmail
       }
-      return email
     })
-
-    setEmails(updatedEmails)
-    setArchived(updatedArchived)
   }
 
   const handleReply = (emailId: string) => {
@@ -450,52 +382,24 @@ export function EmailsPage() {
   }
 
   const handleArchive = (emailId: string) => {
-    // Encontrar o e-mail a ser arquivado
-    const emailToArchive = emails.find((email) => email.id === emailId)
-
-    if (emailToArchive) {
-      // Analisar e adicionar categoria da base de conhecimento se não tiver
-      let updatedEmail = emailToArchive
-      if (!emailToArchive.knowledgeCategory) {
-        const category = analyzeEmailContent(emailToArchive.body, emailToArchive.subject)
-        updatedEmail = { ...emailToArchive, knowledgeCategory: category }
+    updateEmailMutation.mutate({
+      id: emailId,
+      data: { status: "arquivados" }
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "E-mail arquivado",
+          description: "O e-mail foi movido para a pasta de arquivados.",
+        })
+      },
+      onError: () => {
+        toast({
+          title: "Erro",
+          description: "Não foi possível arquivar o e-mail.",
+          variant: "destructive",
+        })
       }
-
-      // Adicionar ação de arquivamento
-      const now = new Date()
-      const archivedEmail = {
-        ...updatedEmail,
-        status: "arquivados" as const,
-        actions: [
-          ...updatedEmail.actions,
-          { type: "archived" as const, timestamp: now, description: "E-mail arquivado" },
-        ],
-      }
-
-      // Remover da lista de e-mails ativos
-      const updatedEmails = emails.filter((email) => email.id !== emailId)
-
-      // Adicionar à lista de arquivados
-      const updatedArchived = [...archived, archivedEmail]
-
-      // Atualizar estados
-      setEmails(updatedEmails)
-      setArchived(updatedArchived)
-
-      // Atualizar no localStorage
-      try {
-        localStorage.setItem("inboxpilot_emails", JSON.stringify(updatedEmails))
-        localStorage.setItem("inboxpilot_archived", JSON.stringify(updatedArchived))
-      } catch (error) {
-        console.error("Erro ao atualizar e-mails no localStorage:", error)
-      }
-
-      toast({
-        title: "E-mail arquivado",
-        description: "O e-mail foi movido para a pasta de arquivados.",
-        duration: 3000,
-      })
-    }
+    })
   }
 
   const handleClearFilters = () => {
@@ -521,11 +425,10 @@ export function EmailsPage() {
   }
 
   const handleRefresh = () => {
-    loadEmails()
+    refetch()
     toast({
       title: "Caixa de entrada atualizada",
       description: "Os e-mails foram atualizados com sucesso.",
-      duration: 3000,
     })
   }
 
