@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  emails        Email[]
+  knowledgeBase KnowledgeBase[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Email {
+  id          String   @id @default(cuid())
+  from        String
+  to          String
+  subject     String
+  content     String   @db.Text
+  htmlContent String?  @db.Text
+  status      String   @default("pending")
+  priority    String   @default("normal")
+  category    String?
+  tags        String[]
+  isRead      Boolean  @default(false)
+  isStarred   Boolean  @default(false)
+  sentiment   String?
+  confidence  Float?
+  aiResponse  String?  @db.Text
+  receivedAt  DateTime @default(now())
+  processedAt DateTime?
+  respondedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([receivedAt])
+}
+
+model KnowledgeBase {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  category    String
+  tags        String[]
+  keywords    String[]
+  isActive    Boolean  @default(true)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([category])
+  @@index([isActive])
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  subject   String
+  content   String   @db.Text
+  category  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmailMetrics {
+  id               String   @id @default(cuid())
+  date             DateTime @unique
+  emailsReceived   Int      @default(0)
+  emailsProcessed  Int      @default(0)
+  emailsResponded  Int      @default(0)
+  averageResponse  Float?
+  sentiment        Json?
+  categories       Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([date])
+}

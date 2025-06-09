@@ -1,0 +1,55 @@
+name: Performance Tests
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Executa diariamente às 2h
+  workflow_dispatch: # Permite execução manual
+
+jobs:
+  lighthouse:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build application
+        run: npm run build
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          
+      - name: Start application
+        run: npm start &
+        
+      - name: Wait for application
+        run: npx wait-on http://localhost:3000
+        
+      - name: Run Lighthouse CI
+        run: npx lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run K6 Load Tests
+        uses: grafana/k6-action@v0.3.0
+        with:
+          filename: tests/load/api-load-test.js
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
