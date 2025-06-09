@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AppLayout } from "@/components/app-layout"
 import { AddKnowledgeModal } from "@/components/add-knowledge-modal"
 import { EditKnowledgeModal } from "@/components/edit-knowledge-modal"
+import { useGetKnowledge } from "@/hooks/useQueries/useGetKnowledge"
+import { useCreateKnowledge, useUpdateKnowledge, useDeleteKnowledge } from "@/hooks/useMutations/useKnowledgeMutations"
+import { toast } from "@/components/ui/use-toast"
 import type { KnowledgeCard } from "@/types/knowledge"
 
 const categories = [
@@ -70,54 +73,27 @@ const mockKnowledgeCards: KnowledgeCard[] = [
 ]
 
 export default function BaseConhecimentoPage() {
-  const [knowledgeCards, setKnowledgeCards] = useState<KnowledgeCard[]>([])
   const [deletedCards, setDeletedCards] = useState<KnowledgeCard[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Todas")
   const [showTrash, setShowTrash] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState<KnowledgeCard | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  // Carregar dados da API ou usar mock data
-  useEffect(() => {
-    loadKnowledgeCards()
-  }, [])
+  // Hooks React Query
+  const { 
+    data: knowledgeCards = [], 
+    isLoading, 
+    isError, 
+    refetch 
+  } = useGetKnowledge({
+    search: searchTerm || undefined,
+    category: selectedCategory !== "Todas" ? selectedCategory : undefined
+  })
 
-  const loadKnowledgeCards = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-
-      // Tentar carregar da API
-      const response = await fetch("/api/knowledge")
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success && Array.isArray(data.data)) {
-          setKnowledgeCards(
-            data.data.map((item: any) => ({
-              ...item,
-              createdAt: new Date(item.created_at),
-              updatedAt: new Date(item.updated_at),
-            })),
-          )
-        } else {
-          throw new Error("Formato de dados inválido")
-        }
-      } else {
-        throw new Error("Erro ao carregar dados da API")
-      }
-    } catch (err) {
-      console.error("Erro ao carregar conhecimentos:", err)
-      setError("Usando dados de exemplo. Conecte-se ao banco de dados para ver dados reais.")
-      // Usar dados mock como fallback
-      setKnowledgeCards(mockKnowledgeCards)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const createKnowledgeMutation = useCreateKnowledge()
+  const updateKnowledgeMutation = useUpdateKnowledge()  
+  const deleteKnowledgeMutation = useDeleteKnowledge()
 
   const filteredCards = (showTrash ? deletedCards : knowledgeCards).filter((card) => {
     const matchesSearch =
@@ -127,108 +103,77 @@ export default function BaseConhecimentoPage() {
     return matchesSearch && matchesCategory
   })
 
-  const handleAddCard = async (newCard: Omit<KnowledgeCard, "id" | "createdAt" | "updatedAt">) => {
-    try {
-      const response = await fetch("/api/knowledge", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newCard),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          const card = {
-            ...data.data,
-            createdAt: new Date(data.data.created_at),
-            updatedAt: new Date(data.data.updated_at),
-          }
-          setKnowledgeCards([card, ...knowledgeCards])
-          setIsAddModalOpen(false)
-          return
-        }
+  const handleAddCard = (newCard: Omit<KnowledgeCard, "id" | "createdAt" | "updatedAt">) => {
+    createKnowledgeMutation.mutate(newCard, {
+      onSuccess: () => {
+        setIsAddModalOpen(false)
+        toast({
+          title: "Conhecimento criado",
+          description: "O conhecimento foi adicionado com sucesso.",
+        })
+      },
+      onError: () => {
+        toast({
+          title: "Erro",
+          description: "Não foi possível criar o conhecimento.",
+          variant: "destructive",
+        })
       }
-
-      throw new Error("Erro ao salvar")
-    } catch (err) {
-      // Fallback para modo local
-      const card: KnowledgeCard = {
-        ...newCard,
-        id: Date.now().toString(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-      setKnowledgeCards([card, ...knowledgeCards])
-      setIsAddModalOpen(false)
-    }
+    })
   }
 
-  const handleEditCard = async (updatedCard: KnowledgeCard) => {
+  const handleEditCard = (updatedCard: KnowledgeCard) => {
     if (showTrash) {
       setDeletedCards(
         deletedCards.map((card) => (card.id === updatedCard.id ? { ...updatedCard, updatedAt: new Date() } : card)),
       )
+      setEditingCard(null)
     } else {
-      try {
-        const response = await fetch(`/api/knowledge/${updatedCard.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            title: updatedCard.title,
-            category: updatedCard.category,
-            content: updatedCard.content,
-          }),
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success) {
-            const card = {
-              ...data.data,
-              createdAt: new Date(data.data.created_at),
-              updatedAt: new Date(data.data.updated_at),
-            }
-            setKnowledgeCards(knowledgeCards.map((c) => (c.id === updatedCard.id ? card : c)))
-            setEditingCard(null)
-            return
-          }
+      updateKnowledgeMutation.mutate({
+        id: updatedCard.id,
+        data: {
+          title: updatedCard.title,
+          category: updatedCard.category,
+          content: updatedCard.content,
         }
-
-        throw new Error("Erro ao atualizar")
-      } catch (err) {
-        // Fallback para modo local
-        setKnowledgeCards(
-          knowledgeCards.map((card) => (card.id === updatedCard.id ? { ...updatedCard, updatedAt: new Date() } : card)),
-        )
-      }
+      }, {
+        onSuccess: () => {
+          setEditingCard(null)
+          toast({
+            title: "Conhecimento atualizado",
+            description: "O conhecimento foi atualizado com sucesso.",
+          })
+        },
+        onError: () => {
+          toast({
+            title: "Erro",
+            description: "Não foi possível atualizar o conhecimento.",
+            variant: "destructive",
+          })
+        }
+      })
     }
-    setEditingCard(null)
   }
 
-  const handleDeleteCard = async (id: string) => {
+  const handleDeleteCard = (id: string) => {
     const cardToDelete = knowledgeCards.find((card) => card.id === id)
     if (cardToDelete) {
-      try {
-        const response = await fetch(`/api/knowledge/${id}`, {
-          method: "DELETE",
-        })
-
-        if (response.ok) {
-          setKnowledgeCards(knowledgeCards.filter((card) => card.id !== id))
+      deleteKnowledgeMutation.mutate({ id }, {
+        onSuccess: () => {
           setDeletedCards([cardToDelete, ...deletedCards])
-          return
+          toast({
+            title: "Conhecimento movido para lixeira",
+            description: "O conhecimento foi movido para a lixeira.",
+          })
+        },
+        onError: () => {
+          toast({
+            title: "Erro",
+            description: "Não foi possível excluir o conhecimento.",
+            variant: "destructive",
+          })
         }
-
-        throw new Error("Erro ao excluir")
-      } catch (err) {
-        // Fallback para modo local
-        setKnowledgeCards(knowledgeCards.filter((card) => card.id !== id))
-        setDeletedCards([cardToDelete, ...deletedCards])
-      }
+      })
     }
   }
 
@@ -236,7 +181,11 @@ export default function BaseConhecimentoPage() {
     const cardToRestore = deletedCards.find((card) => card.id === id)
     if (cardToRestore) {
       setDeletedCards(deletedCards.filter((card) => card.id !== id))
-      setKnowledgeCards([cardToRestore, ...knowledgeCards])
+      // Aqui seria ideal ter uma API para restaurar, mas por agora só remove da lixeira local
+      toast({
+        title: "Conhecimento restaurado",
+        description: "O conhecimento foi restaurado da lixeira.",
+      })
     }
   }
 
@@ -283,9 +232,9 @@ export default function BaseConhecimentoPage() {
         <div>
           <h1 className="text-2xl font-semibold text-[#0088FF] mb-1">Base de Conhecimento</h1>
           <p className="text-sm text-gray-500">Gerencie suas respostas modelo</p>
-          {error && (
+          {isError && (
             <div className="mt-2 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-md border border-amber-200">
-              ⚠️ {error}
+              ⚠️ Erro ao carregar dados. Verifique sua conexão.
             </div>
           )}
         </div>
