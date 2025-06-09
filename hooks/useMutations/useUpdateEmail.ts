@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { prisma } from "@/lib/prisma"
 
 interface UpdateEmailParams {
   id: string
@@ -13,13 +12,25 @@ interface UpdateEmailParams {
 }
 
 async function updateEmail({ id, data }: UpdateEmailParams) {
-  return await prisma.email.update({
-    where: { id },
-    data: {
-      ...data,
-      updatedAt: new Date(),
+  const response = await fetch(`/api/emails/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify(data),
   })
+
+  if (!response.ok) {
+    throw new Error("Erro ao atualizar email")
+  }
+
+  const result = await response.json()
+  
+  if (!result.success) {
+    throw new Error(result.message || "Erro ao atualizar email")
+  }
+
+  return result.data
 }
 
 export function useUpdateEmail() {

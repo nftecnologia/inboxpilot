@@ -1,36 +1,37 @@
 import { useQuery } from "@tanstack/react-query"
-import { prisma } from "@/lib/prisma"
 
 interface UseGetEmailsParams {
-  userId?: string
   status?: string
   category?: string
   limit?: number
 }
 
-async function fetchEmails({ userId, status, category, limit = 50 }: UseGetEmailsParams) {
-  if (!userId) throw new Error("User ID é obrigatório")
+async function fetchEmails({ status, category, limit = 50 }: UseGetEmailsParams) {
+  const params = new URLSearchParams()
+  
+  if (status) params.append("status", status)
+  if (category) params.append("category", category)
+  params.append("limit", limit.toString())
 
-  const emails = await prisma.email.findMany({
-    where: {
-      userId,
-      ...(status && { status }),
-      ...(category && { category }),
-    },
-    orderBy: {
-      receivedAt: "desc",
-    },
-    take: limit,
-  })
+  const response = await fetch(`/api/emails?${params}`)
+  
+  if (!response.ok) {
+    throw new Error("Erro ao buscar emails")
+  }
 
-  return emails
+  const result = await response.json()
+  
+  if (!result.success) {
+    throw new Error(result.message || "Erro ao buscar emails")
+  }
+
+  return result.data
 }
 
-export function useGetEmails(params: UseGetEmailsParams) {
+export function useGetEmails(params: UseGetEmailsParams = {}) {
   return useQuery({
     queryKey: ["emails", params],
     queryFn: () => fetchEmails(params),
-    enabled: !!params.userId,
     staleTime: 1000 * 60 * 5, // 5 minutos
     retry: 1,
   })
