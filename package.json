@@ -46,7 +46,6 @@
     "@radix-ui/react-toggle-group": "latest",
     "@radix-ui/react-tooltip": "latest",
     "@auth/prisma-adapter": "latest",
-    "@neon-toolkit/serverless": "latest",
     "@neondatabase/serverless": "latest",
     "@tanstack/react-query": "latest",
     "@tanstack/react-query-devtools": "latest",
