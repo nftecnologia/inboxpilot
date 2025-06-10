@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { analisarEmail, gerarRespostaEmail, extrairPalavrasChave, avaliarComplexidade } from "@/lib/openai"
+import { processEmailJob } from "@/src/trigger/processEmail"
 
 export async function POST(request: Request) {
   try {
@@ -49,6 +50,23 @@ export async function POST(request: Request) {
     }
 
     console.log(`🤖 Iniciando processamento IA do email ${emailId}`)
+
+    // Opção 1: Usar Trigger.dev para processamento assíncrono
+    // Descomente para usar filas ao invés de processamento direto
+    /*
+    const handle = await processEmailJob.trigger({
+      emailId,
+      userId: session.user.id
+    })
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: "Email enviado para processamento",
+      jobId: handle.id
+    })
+    */
+
+    // Opção 2: Processamento direto (atual)
 
     // Processar com IA
     const [categoria, palavrasChave, complexidade] = await Promise.all([

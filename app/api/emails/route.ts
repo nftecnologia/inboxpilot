@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { processEmailJob } from "@/src/trigger/processEmail"
 
 export async function GET(request: Request) {
   try {
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { from, to, subject, content, htmlContent, category, priority } = body
+    const { from, to, subject, content, htmlContent, category, priority, autoProcess = true } = body
 
     if (!from || !to || !subject || !content) {
       return NextResponse.json({ 
@@ -62,6 +63,7 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
+    // Criar email
     const email = await prisma.email.create({
       data: {
         from,
@@ -75,7 +77,27 @@ export async function POST(request: Request) {
       },
     })
 
-    return NextResponse.json({ success: true, data: email }, { status: 201 })
+    // Processar automaticamente com IA usando Trigger.dev
+    if (autoProcess) {
+      try {
+        const handle = await processEmailJob.trigger({
+          emailId: email.id,
+          userId: session.user.id
+        })
+        
+        console.log(`📧 Email ${email.id} enviado para processamento - Job ID: ${handle.id}`)
+      } catch (error) {
+        console.error("Erro ao disparar job de processamento:", error)
+        // Não falhar a criação do email se o job falhar
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      data: email,
+      processing: autoProcess 
+    }, { status: 201 })
+    
   } catch (error) {
     console.error("Erro ao criar email:", error)
     return NextResponse.json({ 

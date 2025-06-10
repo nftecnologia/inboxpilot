@@ -33,7 +33,7 @@ export async function GET() {
         where: { 
           userId: session.user.id,
           aiAnalyzed: true 
-        }
+        } as any
       }),
 
       // Emails respondidos automaticamente
@@ -43,21 +43,21 @@ export async function GET() {
           aiAnalyzed: true,
           aiResponse: { not: null },
           status: "respondidos"
-        }
+        } as any
       }),
 
       // Estatísticas de complexidade
       prisma.email.groupBy({
-        by: ['aiComplexity'],
+        by: ['aiComplexity' as any],
         where: {
           userId: session.user.id,
           aiAnalyzed: true,
           aiComplexity: { not: null }
-        },
+        } as any,
         _count: {
           aiComplexity: true
-        }
-      }),
+        } as any
+      } as any),
 
       // Estatísticas de categoria
       prisma.email.groupBy({
@@ -66,7 +66,7 @@ export async function GET() {
           userId: session.user.id,
           aiAnalyzed: true,
           category: { not: null }
-        },
+        } as any,
         _count: {
           category: true
         },
@@ -86,12 +86,12 @@ export async function GET() {
           processedAt: {
             gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 dias atrás
           }
-        },
+        } as any,
         select: {
           processedAt: true,
           aiComplexity: true,
           aiResponse: true
-        },
+        } as any,
         orderBy: {
           processedAt: 'desc'
         }
@@ -104,13 +104,13 @@ export async function GET() {
 
     // Processar dados de complexidade
     const complexityBreakdown = {
-      simple: complexityStats.filter(s => s.aiComplexity && s.aiComplexity <= 2).reduce((sum, s) => sum + s._count.aiComplexity, 0),
-      moderate: complexityStats.filter(s => s.aiComplexity === 3).reduce((sum, s) => sum + s._count.aiComplexity, 0),
-      complex: complexityStats.filter(s => s.aiComplexity && s.aiComplexity >= 4).reduce((sum, s) => sum + s._count.aiComplexity, 0)
+      simple: (complexityStats as any[]).filter((s: any) => s.aiComplexity && s.aiComplexity <= 2).reduce((sum, s: any) => sum + s._count.aiComplexity, 0),
+      moderate: (complexityStats as any[]).filter((s: any) => s.aiComplexity === 3).reduce((sum, s: any) => sum + s._count.aiComplexity, 0),
+      complex: (complexityStats as any[]).filter((s: any) => s.aiComplexity && s.aiComplexity >= 4).reduce((sum, s: any) => sum + s._count.aiComplexity, 0)
     }
 
     // Processar tendências diárias
-    const dailyTrends = processingTrends.reduce((acc: any, email) => {
+    const dailyTrends = (processingTrends as any[]).reduce((acc: any, email: any) => {
       if (!email.processedAt) return acc
       
       const date = email.processedAt.toISOString().split('T')[0]
@@ -136,17 +136,19 @@ export async function GET() {
       where: {
         userId: session.user.id,
         aiAnalyzed: true,
-        aiKeywords: { not: { equals: [] } }
-      },
+        aiKeywords: { isEmpty: false }
+      } as any,
       select: {
         aiKeywords: true
-      }
-    })
+      } as any
+    }) as any[]
 
-    const keywordCounts = keywordsData.reduce((acc: any, email) => {
-      email.aiKeywords.forEach(keyword => {
-        acc[keyword] = (acc[keyword] || 0) + 1
-      })
+    const keywordCounts = keywordsData.reduce((acc: any, email: any) => {
+      if (email.aiKeywords && Array.isArray(email.aiKeywords)) {
+        email.aiKeywords.forEach((keyword: string) => {
+          acc[keyword] = (acc[keyword] || 0) + 1
+        })
+      }
       return acc
     }, {})
 
@@ -164,9 +166,9 @@ export async function GET() {
         autoResponseRate: Math.round(autoResponseRate * 100) / 100
       },
       complexityBreakdown,
-      categoryStats: categoryStats.map(stat => ({
+      categoryStats: (categoryStats as any[]).map((stat: any) => ({
         category: stat.category,
-        count: stat._count.category
+        count: stat._count?.category || 0
       })),
       trends: trendsArray,
       topKeywords,

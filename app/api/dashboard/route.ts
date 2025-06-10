@@ -92,8 +92,7 @@ export async function GET() {
     const emailsWithResponse = await prisma.email.findMany({
       where: {
         userId,
-        respondedAt: { not: null },
-        receivedAt: { not: null }
+        respondedAt: { not: null }
       },
       select: {
         receivedAt: true,
