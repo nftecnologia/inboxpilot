@@ -14,8 +14,13 @@ export const metadata: Metadata = {
   title: "InboxPilot - Centralização e Automação de E-mails",
   description:
     "Centralize e automatize o atendimento via e-mail de suporte da sua empresa, utilizando IA para classificar e responder automaticamente.",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
     generator: 'v0.dev'
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1
 }
 
 export default function RootLayout({
@@ -24,11 +29,17 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className="h-full">
+    <html lang="pt-BR" className="h-full" suppressHydrationWarning>
       <body className={`${inter.className} h-full overflow-x-hidden`}>
         <NextAuthSessionProvider>
           <QueryProvider>
-            <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+            <ThemeProvider 
+              attribute="class" 
+              defaultTheme="light" 
+              enableSystem={false} 
+              disableTransitionOnChange
+              storageKey="inboxpilot-theme"
+            >
               <ErrorBoundary>
                 {children}
               </ErrorBoundary>
