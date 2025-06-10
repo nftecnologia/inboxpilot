@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/app-layout"
 import { EmailView } from "@/components/email-view"
 import { ClientInfo } from "@/components/client-info"
 import { EmailHistory } from "@/components/email-history"
+import { AIAnalysisPanel } from "@/components/ai-analysis-panel"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Loader2, Star, Archive } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -471,6 +472,23 @@ export default function EmailDetailPage() {
 
         {isClientInfoOpen && (
           <div className="w-1/4 space-y-4 animate-in slide-in-from-right duration-300">
+            <AIAnalysisPanel 
+              email={email} 
+              onAnalysisComplete={(result) => {
+                // Atualizar o email com os resultados da análise
+                const updatedEmail = {
+                  ...email,
+                  category: result.analysis.category,
+                  aiKeywords: result.analysis.keywords,
+                  aiComplexity: result.analysis.complexity,
+                  aiResponse: result.aiResponse,
+                  aiAnalyzed: true,
+                  status: result.analysis.newStatus,
+                }
+                setEmail(updatedEmail)
+                updateEmailInStorage(updatedEmail)
+              }}
+            />
             <ClientInfo email={email} />
             <EmailHistory emails={previousEmails} />
           </div>

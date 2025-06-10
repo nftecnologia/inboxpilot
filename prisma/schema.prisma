@@ -76,6 +76,9 @@ model Email {
   sentiment   String?
   confidence  Float?
   aiResponse  String?  @db.Text
+  aiAnalyzed  Boolean  @default(false)
+  aiKeywords  String[]
+  aiComplexity Int?
   receivedAt  DateTime @default(now())
   processedAt DateTime?
   respondedAt DateTime?
@@ -88,6 +91,7 @@ model Email {
   @@index([status])
   @@index([category])
   @@index([receivedAt])
+  @@index([aiAnalyzed])
 }
 
 model KnowledgeBase {
