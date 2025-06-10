@@ -17,6 +17,7 @@ import {
   CheckCheck,
   AlertCircle,
   Clock,
+  Brain,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -133,6 +134,11 @@ export function AppLayout({ children }: AppLayoutProps) {
       name: "Base de Conhecimento",
       path: "/base-conhecimento",
       icon: BookOpen,
+    },
+    {
+      name: "Analytics de IA",
+      path: "/ia",
+      icon: Brain,
     },
     {
       name: "Relatórios",
