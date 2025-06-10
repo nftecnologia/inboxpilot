@@ -12,13 +12,11 @@ const loginSchema = z.object({
 })
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
   },
   pages: {
     signIn: "/login",
-    signUp: "/cadastro",
     error: "/auth/error",
   },
   providers: [
@@ -34,28 +32,34 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("🔴 Credenciais ausentes")
           return null
         }
 
         try {
+          console.log("🔍 Tentando autenticar:", credentials.email)
           const { email, password } = loginSchema.parse(credentials)
 
           const user = await prisma.user.findUnique({
             where: { email },
           })
 
+          console.log("👤 Usuário encontrado:", user ? "Sim" : "Não")
+
           if (!user) {
+            console.log("❌ Usuário não encontrado para:", email)
             return null
           }
 
-          // Para demo, vou aceitar qualquer senha
-          // Em produção, use bcrypt: const isPasswordValid = await compare(password, user.password)
+          // Para demo, aceitar qualquer senha
           const isPasswordValid = true
+          console.log("🔐 Senha válida:", isPasswordValid)
 
           if (!isPasswordValid) {
             return null
           }
 
+          console.log("✅ Login bem-sucedido para:", user.email)
           return {
             id: user.id,
             email: user.email,
@@ -63,7 +67,7 @@ export const authOptions: NextAuthOptions = {
             image: user.image,
           }
         } catch (error) {
-          console.error("Erro na autenticação:", error)
+          console.error("🔴 Erro na autenticação:", error)
           return null
         }
       }
