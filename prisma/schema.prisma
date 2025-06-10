@@ -44,12 +44,18 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  role          String    @default("agent") // admin, manager, agent
+  department    String?
+  isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
   emails        Email[]
   knowledgeBase KnowledgeBase[]
+  assignedTickets Ticket[] @relation("AssignedTickets")
+  createdTickets  Ticket[] @relation("CreatedTickets") 
+  interactions    Interaction[]
 }
 
 model VerificationToken {
@@ -85,13 +91,16 @@ model Email {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   userId      String
+  ticketId    String?
   user        User     @relation(fields: [userId], references: [id])
+  ticket      Ticket?  @relation(fields: [ticketId], references: [id])
 
   @@index([userId])
   @@index([status])
   @@index([category])
   @@index([receivedAt])
   @@index([aiAnalyzed])
+  @@index([ticketId])
 }
 
 model KnowledgeBase {
@@ -137,4 +146,114 @@ model EmailMetrics {
   updatedAt        DateTime @updatedAt
 
   @@index([date])
+}
+
+// CRM Models
+model Client {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  company     String?
+  phone       String?
+  location    String?
+  avatar      String?
+  notes       String?  @db.Text
+  satisfaction Float?  // 1-5 rating
+  totalTickets Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  tickets     Ticket[]
+  
+  @@index([email])
+  @@index([company])
+}
+
+model Ticket {
+  id          String       @id @default(cuid())
+  number      Int          @unique @default(autoincrement())
+  subject     String
+  description String?      @db.Text
+  status      TicketStatus @default(OPEN)
+  priority    Priority     @default(MEDIUM)
+  category    String?
+  source      String       @default("email") // email, chat, phone, form
+  clientId    String
+  assigneeId  String?
+  createdBy   String?
+  slaDeadline DateTime?
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  client      Client       @relation(fields: [clientId], references: [id])
+  assignee    User?        @relation(name: "AssignedTickets", fields: [assigneeId], references: [id])
+  creator     User?        @relation(name: "CreatedTickets", fields: [createdBy], references: [id])
+  emails      Email[]
+  interactions Interaction[]
+  tags        TicketTag[]
+  
+  @@index([status])
+  @@index([priority])
+  @@index([clientId])
+  @@index([assigneeId])
+  @@index([createdAt])
+}
+
+model Interaction {
+  id          String          @id @default(cuid())
+  ticketId    String
+  userId      String?
+  type        InteractionType @default(NOTE)
+  content     String          @db.Text
+  isPublic    Boolean         @default(true)
+  isInternal  Boolean         @default(false)
+  duration    Int?            // em minutos
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  ticket      Ticket          @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user        User?           @relation(fields: [userId], references: [id])
+  
+  @@index([ticketId])
+  @@index([userId])
+  @@index([type])
+}
+
+model TicketTag {
+  id       String @id @default(cuid())
+  ticketId String
+  name     String
+  color    String @default("#3B82F6")
+  
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@unique([ticketId, name])
+}
+
+// Enums
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS  
+  WAITING_CLIENT
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum InteractionType {
+  EMAIL
+  NOTE
+  CALL
+  MEETING
+  SMS
+  CHAT
 }

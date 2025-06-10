@@ -132,6 +132,12 @@ export function AppLayout({ children }: AppLayoutProps) {
       badge: "32",
     },
     {
+      name: "Tickets CRM",
+      path: "/tickets",
+      icon: CheckCheck,
+      badge: "12",
+    },
+    {
       name: "Base de Conhecimento",
       path: "/base-conhecimento",
       icon: BookOpen,
