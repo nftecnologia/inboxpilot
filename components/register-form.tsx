@@ -10,6 +10,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
+import { useToast } from "@/components/ui/use-toast"
+import { z } from "zod"
+
+const registerSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.string().email("E-mail inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+})
 
 export function RegisterForm() {
   const [fullName, setFullName] = useState("")
@@ -19,6 +27,7 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,13 +38,56 @@ export function RegisterForm() {
       return
     }
 
-    setIsLoading(true)
+    try {
+      // Validar dados no front-end
+      const validation = registerSchema.safeParse({
+        name: fullName,
+        email,
+        password,
+      })
 
-    // Simulação de cadastro - em produção, conectaria com backend
-    setTimeout(() => {
+      if (!validation.success) {
+        setError(validation.error.errors[0].message)
+        return
+      }
+
+      setIsLoading(true)
+
+      // Chamar API de registro
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: fullName,
+          email,
+          password,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Erro no cadastro')
+        return
+      }
+
+      // Sucesso
+      toast({
+        title: "Cadastro realizado",
+        description: "Conta criada com sucesso! Faça login para continuar.",
+      })
+
+      // Redirecionar para login
+      router.push("/login")
+
+    } catch (error) {
+      console.error('Erro no cadastro:', error)
+      setError('Erro inesperado. Tente novamente.')
+    } finally {
       setIsLoading(false)
-      router.push("/dashboard")
-    }, 1000)
+    }
   }
 
   return (

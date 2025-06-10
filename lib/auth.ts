@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
 
           const user = await prisma.user.findUnique({
             where: { email },
-          })
+          }) as any
 
           console.log("👤 Usuário encontrado:", user ? "Sim" : "Não")
 
@@ -51,11 +51,12 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
-          // Para demo, aceitar qualquer senha
-          const isPasswordValid = true
+          // Verificar senha hasheada
+          const isPasswordValid = user.password ? await compare(password, user.password) : false
           console.log("🔐 Senha válida:", isPasswordValid)
 
           if (!isPasswordValid) {
+            console.log("❌ Senha incorreta para:", email)
             return null
           }
 
