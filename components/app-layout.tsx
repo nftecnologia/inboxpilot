@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { RealTimeNotifications } from "@/components/real-time-notifications"
 import { useState, useEffect } from "react"
 
 interface AppLayoutProps {
@@ -340,6 +341,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Page content - Ocupa toda a tela sem padding */}
         <main className="flex-1 h-full w-full overflow-auto bg-[#F9FAFB] px-4 py-4 sm:px-6 sm:py-5">{children}</main>
       </div>
+
+      {/* Real-time Notifications - Fixed position */}
+      <RealTimeNotifications />
     </div>
   )
 }
