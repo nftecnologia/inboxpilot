@@ -1,9 +1,25 @@
 # 📊 InboxPilot - Status do Sistema
 
 ## 📅 Última Atualização
-**Data:** 10/06/2025 14:06 BRT  
-**Commit:** cd854e4 - Feat(auth): implementar sistema de cadastro funcional  
+**Data:** 10/06/2025 15:07 BRT  
+**Commit:** 9de84e6 - Fix(auth): corrigir problema de dependências e criar usuários teste  
 **Status:** 🟢 Funcional e Operacional
+
+## 📅 10/06/2025 15:07 - CORREÇÃO CRÍTICA
+### 🐛 Corrigido:
+- **Problema do campo password não reconhecido pelo Prisma**
+- **Executado `npx prisma db push --force-reset`** para sincronizar schema
+- **Regenerado Prisma Client** com campo password
+- **Servidor Next.js reiniciado** para carregar novo cliente
+
+### ✅ Adicionado:
+- **Usuário criado no banco:** nicolas.fer.oli@gmail.com (senha: 123456)
+- **Scripts de teste** para validar autenticação
+- **Dependência bcryptjs** instalada corretamente
+
+### 🔄 Modificado:
+- **Banco resetado e sincronizado** com schema atualizado
+- **Cliente Prisma regenerado** com novos tipos
 
 ---
 
