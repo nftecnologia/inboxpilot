@@ -16,20 +16,9 @@ export function useSocket(): SocketContextType {
   const { data: session } = useSession()
 
   useEffect(() => {
-    // Simular inicialização da conexão
-    console.log("🔌 Conexão simulada inicializada")
-    
-    // Verificar status da API
-    fetch("/api/socket")
-      .then(res => res.json())
-      .then(data => {
-        console.log("✅ Socket API status:", data)
-        setIsConnected(true)
-      })
-      .catch(error => {
-        console.error("❌ Erro ao conectar:", error)
-        setIsConnected(false)
-      })
+    // Simular conexão ativa sem fazer requests
+    console.log("🔌 Notificações em tempo real simuladas (desenvolvimento)")
+    setIsConnected(true)
   }, [])
 
   const emit = async (event: string, data?: any) => {
