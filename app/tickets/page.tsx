@@ -276,7 +276,14 @@ export default function TicketsPage() {
           <Button size="sm" className="bg-[#0088FF] hover:bg-blue-600 text-white" onClick={handleRefresh}>
             Atualizar
           </Button>
-          <Button size="sm" variant="outline">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => {
+              // Criar novo ticket - redirecionar para formulário
+              router.push('/tickets/new')
+            }}
+          >
             <Plus className="h-4 w-4 mr-1" />
             Novo Ticket
           </Button>
