@@ -129,13 +129,13 @@ export function AppLayout({ children }: AppLayoutProps) {
       name: "E-mails",
       path: "/emails",
       icon: Mail,
-      badge: "32",
+      // badge removido - será dinâmico no futuro
     },
     {
       name: "Tickets CRM",
       path: "/tickets",
       icon: CheckCheck,
-      badge: "12",
+      // badge removido - será dinâmico no futuro
     },
     {
       name: "Base de Conhecimento",
@@ -290,11 +290,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                   >
                     <item.icon className={`h-4 w-4 mr-2 ${isActive(item.path) ? "text-[#2A65F9]" : "text-gray-500"}`} />
                     <span className="text-sm">{item.name}</span>
-                    {item.badge && (
-                      <Badge className="ml-auto bg-gradient-to-r from-[#2A65F9] to-[#1D4ED8] text-white text-xs shadow-sm">
-                        {item.badge}
-                      </Badge>
-                    )}
                     {isActive(item.path) && <ChevronRight className="ml-auto h-4 w-4" />}
                   </Link>
                 </li>
