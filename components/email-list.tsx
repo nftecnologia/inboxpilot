@@ -118,7 +118,9 @@ export function EmailList({ emails, onSelectEmail, onFavorite, onReply, onArchiv
                     {email.senderName} ({email.sender})
                   </span>
                   <span className="text-xs font-light">
-                    {formatDistanceToNow(email.date, { addSuffix: true, locale: ptBR })}
+                    {email.date && 
+                      formatDistanceToNow(new Date(email.date), { addSuffix: true, locale: ptBR })
+                    }
                   </span>
                 </div>
               </div>
