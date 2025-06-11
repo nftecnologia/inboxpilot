@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { StatusBadge } from "@/components/status-badge"
 import { useState } from "react"
-import { motion } from "framer-motion"
+// import { motion } from "framer-motion" // Removido temporariamente para performance
 import { useRouter } from "next/navigation"
 import type { Email } from "@/types/email"
 
@@ -73,12 +73,7 @@ export function EmailList({ emails, onSelectEmail, onFavorite, onReply, onArchiv
   return (
     <div className="space-y-2">
       {emails.map((email, index) => (
-        <motion.div
-          key={email.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, delay: index * 0.05 }}
-        >
+        <div key={email.id}>
           <Card
             className={`p-3 transition-all duration-200 cursor-pointer border border-[#E0E0E0] ${
               hoveredId === email.id
@@ -171,17 +166,12 @@ export function EmailList({ emails, onSelectEmail, onFavorite, onReply, onArchiv
               </div>
             </div>
           </Card>
-        </motion.div>
+        </div>
       ))}
       {emails.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="text-center py-8 text-gray-500 bg-gray-50/50 rounded-lg border border-dashed border-gray-200"
-        >
+        <div className="text-center py-8 text-gray-500 bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
           Nenhum e-mail encontrado nesta categoria
-        </motion.div>
+        </div>
       )}
     </div>
   )
