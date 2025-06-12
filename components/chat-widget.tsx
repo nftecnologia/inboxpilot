@@ -305,7 +305,7 @@ export function ChatWidget({
       {/* Widget do chat */}
       {isOpen && (
         <Card className={cn(
-          "fixed z-50 w-[380px] h-[600px] flex flex-col shadow-2xl",
+          "fixed z-50 w-[420px] h-[650px] flex flex-col shadow-2xl border-0 overflow-hidden",
           positionClasses
         )}>
           {/* Header */}
@@ -395,57 +395,96 @@ export function ChatWidget({
             </form>
           ) : (
           /* Área de mensagens */
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
+          <ScrollArea className="flex-1 p-4 bg-gray-50">
+            <div className="space-y-3">
               {messages.map((message) => (
                 <div
                   key={message.id}
                   className={cn(
-                    "flex",
+                    "flex animate-in fade-in-0 slide-in-from-bottom-2 duration-300",
                     message.role === "USER" ? "justify-end" : "justify-start"
                   )}
                 >
                   <div
                     className={cn(
-                      "flex gap-2 max-w-[80%]",
+                      "flex gap-2 max-w-[85%]",
                       message.role === "USER" ? "flex-row-reverse" : "flex-row"
                     )}
                   >
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>
-                        {message.role === "USER" ? "U" : "K"}
+                    <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
+                      <AvatarFallback className={cn(
+                        message.role === "USER" 
+                          ? "bg-blue-500 text-white" 
+                          : message.role === "SYSTEM"
+                          ? "bg-gray-500 text-white"
+                          : "bg-green-500 text-white"
+                      )}>
+                        {message.role === "USER" ? "V" : 
+                         message.role === "SYSTEM" ? "S" : "A"}
                       </AvatarFallback>
                     </Avatar>
-                    <div
-                      className={cn(
-                        "rounded-lg px-4 py-2",
-                        message.role === "USER"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-100 text-gray-900"
-                      )}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      {message.confidence && message.confidence < 0.8 && (
-                        <Badge 
-                          variant="outline" 
-                          className="mt-2 text-xs border-orange-300 text-orange-600"
-                        >
-                          Confiança: {(message.confidence * 100).toFixed(0)}%
-                        </Badge>
-                      )}
+                    <div className="flex flex-col gap-1">
+                      {/* Nome/Role do remetente */}
+                      <span className={cn(
+                        "text-xs font-medium px-2",
+                        message.role === "USER" ? "text-right" : "text-left",
+                        message.role === "SYSTEM" ? "text-gray-500" : "text-gray-700"
+                      )}>
+                        {message.role === "USER" ? "Você" : 
+                         message.role === "SYSTEM" ? "Sistema" : 
+                         message.role === "ASSISTANT" && message.metadata?.isHuman ? "Atendente" : "Assistente IA"}
+                      </span>
+                      
+                      <div
+                        className={cn(
+                          "rounded-lg px-4 py-2.5 shadow-sm",
+                          message.role === "USER"
+                            ? "bg-blue-500 text-white"
+                            : message.role === "SYSTEM"
+                            ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                            : message.role === "ASSISTANT" && message.metadata?.isHuman
+                            ? "bg-green-100 text-green-900 border border-green-200"
+                            : "bg-white text-gray-900 border border-gray-200"
+                        )}
+                      >
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                        
+                        {/* Timestamp */}
+                        <p className={cn(
+                          "text-xs mt-1 opacity-70",
+                          message.role === "USER" ? "text-blue-100" : "text-gray-500"
+                        )}>
+                          {new Date(message.createdAt).toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                        
+                        {message.confidence && message.confidence < 0.8 && (
+                          <Badge 
+                            variant="outline" 
+                            className="mt-2 text-xs border-orange-300 text-orange-600"
+                          >
+                            Confiança: {(message.confidence * 100).toFixed(0)}%
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
               
               {isLoading && (
-                <div className="flex justify-start">
+                <div className="flex justify-start animate-in fade-in-0 slide-in-from-bottom-2">
                   <div className="flex gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>K</AvatarFallback>
+                    <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
+                      <AvatarFallback className="bg-gray-500 text-white">A</AvatarFallback>
                     </Avatar>
-                    <div className="bg-gray-100 rounded-lg px-4 py-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                        <span className="text-sm text-gray-500">Digitando...</span>
+                      </div>
                     </div>
                   </div>
                 </div>
