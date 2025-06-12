@@ -78,6 +78,7 @@
     "next-auth": "latest",
     "next-safe-action": "latest",
     "next-themes": "latest",
+    "openai": "^5.3.0",
     "path": "latest",
     "prisma": "latest",
     "react": "^19",
