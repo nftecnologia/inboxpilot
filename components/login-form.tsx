@@ -56,12 +56,24 @@ export function LoginForm() {
         return
       }
 
-      toast({
-        title: "Login realizado",
-        description: "Bem-vindo ao Kirvano Suporte!",
-      })
+      if (result?.ok) {
+        toast({
+          title: "Login realizado",
+          description: "Bem-vindo ao Kirvano Suporte!",
+        })
 
-      router.push("/dashboard")
+        // Aguardar um momento para garantir que a sessão foi estabelecida
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Refresh para atualizar o estado de autenticação
+        router.refresh()
+        
+        // Aguardar mais um momento antes de redirecionar
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Redirecionar para o dashboard
+        router.push("/dashboard")
+      }
     } catch (error) {
       console.error("Erro no login:", error)
       toast({

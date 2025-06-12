@@ -75,6 +75,18 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Se a URL começar com /, adicionar o baseUrl
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`
+      }
+      // Se a URL já for do mesmo domínio, usar ela
+      else if (new URL(url).origin === baseUrl) {
+        return url
+      }
+      // Caso contrário, redirecionar para o dashboard
+      return `${baseUrl}/dashboard`
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
