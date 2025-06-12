@@ -47,4 +47,13 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
   res.end()
 }
 
+// Função para obter a instância do Socket.IO do servidor
+export function getIO(): ServerIO | undefined {
+  if (typeof window === "undefined") {
+    // Server-side: tentar acessar a instância global
+    return (global as any).io
+  }
+  return undefined
+}
+
 export default SocketHandler

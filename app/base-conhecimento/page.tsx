@@ -337,7 +337,9 @@ export default function BaseConhecimentoPage() {
               </CardHeader>
               <CardContent className="pt-0">
                 <p className="text-sm text-gray-600 line-clamp-2 mb-2">{card.content}</p>
-                <div className="text-xs text-gray-400">Atualizado em {card.updatedAt.toLocaleDateString("pt-BR")}</div>
+                <div className="text-xs text-gray-400">
+                  Atualizado em {new Date(card.updatedAt).toLocaleDateString("pt-BR")}
+                </div>
               </CardContent>
             </Card>
           ))}

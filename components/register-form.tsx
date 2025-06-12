@@ -101,8 +101,9 @@ export function RegisterForm() {
         {/* Logo em destaque */}
         <div className="text-center mb-6">
           <div className="relative inline-block">
-            <div className="absolute inset-0 bg-blue-400/20 rounded-full blur-lg scale-110"></div>
-            <img src="/inboxpilot-logo-blue.png" alt="InboxPilot" className="h-14 w-auto mx-auto relative z-10" />
+            <div className="absolute inset-0 bg-blue-400/20 rounded-lg blur-lg scale-110"></div>
+            <h1 className="text-4xl font-bold text-blue-600 relative z-10 tracking-tight">KIRVANO</h1>
+            <p className="text-sm text-gray-600 mt-1 relative z-10">Suporte Inteligente</p>
           </div>
         </div>
 
@@ -116,7 +117,7 @@ export function RegisterForm() {
           <CardContent className="p-6">
             <div className="text-center mb-5">
               <h2 className="text-xl font-semibold text-gray-800 tracking-tight">Criar conta</h2>
-              <p className="text-sm text-gray-500 mt-1">Junte-se ao InboxPilot</p>
+              <p className="text-sm text-gray-500 mt-1">Junte-se ao Kirvano Suporte</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">

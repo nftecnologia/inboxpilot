@@ -124,7 +124,7 @@ export function RelatoriosPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <div>
             <h1 className="text-2xl font-semibold text-[#0088FF] mb-1">Relatórios</h1>
-            <p className="text-sm text-gray-500">Análise detalhada do desempenho do InboxPilot</p>
+            <p className="text-sm text-gray-500">Análise detalhada do desempenho do Kirvano Suporte</p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-2">

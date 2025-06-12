@@ -1,6 +1,7 @@
 import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { buscarConhecimentoRelevante, formatarConhecimentoParaIA } from "./knowledge-search"
+import { getRelevantContext } from "./pinecone"
 
 // Função para analisar o conteúdo do e-mail e categorizar
 export async function analisarEmail(assunto: string, corpo: string) {
@@ -62,11 +63,24 @@ export async function gerarRespostaEmail(
   console.log("🔍 gerarRespostaEmail chamada")
 
   try {
-    // Buscar conhecimento relevante na base de dados
-    console.log("🔍 Buscando conhecimento relevante...")
-    const conhecimentosRelevantes = await buscarConhecimentoRelevante(categoria, palavrasChave, assunto, corpo)
-    const contextoConhecimento = formatarConhecimentoParaIA(conhecimentosRelevantes)
-    console.log("✅ Conhecimento encontrado:", conhecimentosRelevantes.length, "itens")
+    // Buscar conhecimento relevante usando Pinecone
+    console.log("🔍 Buscando conhecimento relevante com Pinecone...")
+    
+    // Combinar assunto e corpo para busca mais efetiva
+    const queryText = `${assunto} ${corpo}`;
+    
+    // Primeiro tenta buscar com Pinecone (busca semântica)
+    let contextoConhecimento = "";
+    try {
+      contextoConhecimento = await getRelevantContext(queryText, categoria, 5);
+      console.log("✅ Contexto encontrado via Pinecone");
+    } catch (pineconeError) {
+      console.warn("⚠️ Erro no Pinecone, usando fallback:", pineconeError);
+      // Fallback para busca tradicional
+      const conhecimentosRelevantes = await buscarConhecimentoRelevante(categoria, palavrasChave, assunto, corpo);
+      contextoConhecimento = formatarConhecimentoParaIA(conhecimentosRelevantes);
+      console.log("✅ Conhecimento encontrado via fallback:", conhecimentosRelevantes.length, "itens");
+    }
 
     const prompt = `
       Você é um assistente de suporte ao cliente profissional e prestativo.

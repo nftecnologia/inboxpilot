@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { getAllKnowledgeCards, createKnowledgeCard, getKnowledgeStats } from "@/lib/knowledge-db"
+import { indexDocument } from "@/lib/pinecone"
 
 export async function GET(request: Request) {
   try {
@@ -49,6 +50,18 @@ export async function POST(request: Request) {
       category: body.category,
       content: body.content,
       userId: session.user.id,
+    })
+
+    // Indexar no Pinecone de forma assíncrona
+    indexDocument(
+      card.id,
+      card.title,
+      card.content,
+      card.category,
+      session.user.id
+    ).catch(error => {
+      console.error("Erro ao indexar no Pinecone (não crítico):", error)
+      // Não falha a operação principal se o Pinecone falhar
     })
 
     return NextResponse.json({ success: true, data: card }, { status: 201 })

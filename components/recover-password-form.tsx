@@ -36,9 +36,10 @@ export function RecoverPasswordForm() {
       <div className="w-full max-w-sm mx-auto">
         {/* Logo em destaque */}
         <div className="text-center mb-6">
-          <div className="inline-block relative">
-            <div className="absolute -inset-1 bg-blue-100 rounded-full blur-md opacity-70"></div>
-            <img src="/inboxpilot-logo-blue.png" alt="InboxPilot" className="h-14 w-auto mx-auto relative" />
+          <div className="relative inline-block">
+            <div className="absolute -inset-1 bg-blue-100 rounded-lg blur-md opacity-70"></div>
+            <h1 className="text-4xl font-bold text-blue-600 relative z-10 tracking-tight">KIRVANO</h1>
+            <p className="text-sm text-gray-600 mt-1 relative z-10">Suporte Inteligente</p>
           </div>
         </div>
 
@@ -108,9 +109,10 @@ export function RecoverPasswordForm() {
     <div className="w-full max-w-sm mx-auto">
       {/* Logo em destaque com efeito sutil */}
       <div className="text-center mb-6">
-        <div className="inline-block relative">
-          <div className="absolute -inset-1 bg-blue-100 rounded-full blur-md opacity-70"></div>
-          <img src="/inboxpilot-logo-blue.png" alt="InboxPilot" className="h-14 w-auto mx-auto relative" />
+        <div className="relative inline-block">
+          <div className="absolute -inset-1 bg-blue-100 rounded-lg blur-md opacity-70"></div>
+          <h1 className="text-4xl font-bold text-blue-600 relative z-10 tracking-tight">KIRVANO</h1>
+          <p className="text-sm text-gray-600 mt-1 relative z-10">Suporte Inteligente</p>
         </div>
       </div>
 

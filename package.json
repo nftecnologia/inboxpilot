@@ -19,6 +19,7 @@
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@neondatabase/serverless": "latest",
+    "@pinecone-database/pinecone": "^6.1.0",
     "@playwright/test": "latest",
     "@prisma/client": "latest",
     "@radix-ui/react-accordion": "latest",
@@ -100,8 +101,11 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.5.0",
+    "form-data": "^4.0.3",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.20.1",
     "typescript": "^5"
   }
 }

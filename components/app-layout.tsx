@@ -18,6 +18,10 @@ import {
   AlertCircle,
   Clock,
   Brain,
+  MessageSquare,
+  Code2,
+  MessageCircle,
+  UserCheck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,6 +35,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { RealTimeNotifications } from "@/components/real-time-notifications"
 import { useState, useEffect } from "react"
+import { useSession, signOut } from "next-auth/react"
 
 interface AppLayoutProps {
   children: ReactNode
@@ -47,6 +52,7 @@ interface Notification {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
   const [isMounted, setIsMounted] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -126,16 +132,19 @@ export function AppLayout({ children }: AppLayoutProps) {
       icon: LayoutDashboard,
     },
     {
-      name: "E-mails",
-      path: "/emails",
-      icon: Mail,
-      // badge removido - será dinâmico no futuro
+      name: "Chat",
+      path: "/chat",
+      icon: MessageCircle,
+    },
+    {
+      name: "Atendimento",
+      path: "/atendimento",
+      icon: UserCheck,
     },
     {
       name: "Tickets CRM",
       path: "/tickets",
       icon: CheckCheck,
-      // badge removido - será dinâmico no futuro
     },
     {
       name: "Base de Conhecimento",
@@ -156,6 +165,11 @@ export function AppLayout({ children }: AppLayoutProps) {
       name: "Configurações",
       path: "/configuracoes",
       icon: Settings,
+    },
+    {
+      name: "Widget Config",
+      path: "/widget-config",
+      icon: Code2,
     },
   ]
 
@@ -189,7 +203,10 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Logo e controles mobile */}
         <div className="py-6 px-4 border-b border-[#E0E0E0] flex items-center justify-between">
           <Link href="/dashboard" className="transition-transform hover:scale-105 duration-200">
-            <img src="/inboxpilot-logo.png" alt="InboxPilot Logo" className="h-8" />
+            <div>
+              <h1 className="text-2xl font-bold text-[#0088FF] tracking-tight">KIRVANO</h1>
+              <p className="text-xs text-gray-500">Suporte Inteligente</p>
+            </div>
           </Link>
           <div className="flex items-center space-x-2">
             {/* Notificações na sidebar para mobile */}
@@ -302,22 +319,25 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="border-t border-[#E0E0E0] p-3">
           <div className="flex items-center space-x-3 px-2 py-3 rounded-md hover:bg-[#F3F4F6] transition-colors cursor-pointer">
             <Avatar className="h-7 w-7 ring-2 ring-[#2A65F9]/20 ring-offset-2 ring-offset-white">
-              <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback className="bg-gradient-to-r from-[#2A65F9] to-[#1D4ED8] text-white">U</AvatarFallback>
+              <AvatarImage src={session?.user?.image || "/placeholder.svg"} />
+              <AvatarFallback className="bg-gradient-to-r from-[#2A65F9] to-[#1D4ED8] text-white">
+                {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-[#2E2E2E] truncate">Usuário</p>
-              <p className="text-[10px] text-gray-500 truncate">usuario@empresa.com</p>
+              <p className="text-xs font-medium text-[#2E2E2E] truncate">
+                {session?.user?.name || "Usuário"}
+              </p>
+              <p className="text-[10px] text-gray-500 truncate">
+                {session?.user?.email || "usuario@empresa.com"}
+              </p>
             </div>
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-gray-500 hover:text-[#2A65F9] hover:bg-blue-50"
-              onClick={() => {
-                // Função de logout aqui
-                console.log("Logout executado")
-                // Redirecionar para página de login
-                window.location.href = "/login"
+              onClick={async () => {
+                await signOut({ callbackUrl: "/login" })
               }}
             >
               <LogOut className="h-4 w-4" />

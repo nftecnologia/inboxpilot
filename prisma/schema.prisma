@@ -57,6 +57,7 @@ model User {
   assignedTickets Ticket[] @relation("AssignedTickets")
   createdTickets  Ticket[] @relation("CreatedTickets") 
   interactions    Interaction[]
+  widgetConfigs   WidgetConfig[]
 }
 
 model VerificationToken {
@@ -165,9 +166,11 @@ model Client {
   updatedAt   DateTime @updatedAt
   
   tickets     Ticket[]
+  chatSessions ChatSession[]
   
   @@index([email])
   @@index([company])
+  @@index([phone])
 }
 
 model Ticket {
@@ -194,6 +197,7 @@ model Ticket {
   emails      Email[]
   interactions Interaction[]
   tags        TicketTag[]
+  chatSessions ChatSession[]
   
   @@index([status])
   @@index([priority])
@@ -257,4 +261,121 @@ enum InteractionType {
   MEETING
   SMS
   CHAT
+}
+
+// Chat Support Models
+model ChatSession {
+  id          String        @id @default(cuid())
+  userId      String?       // null for anonymous users
+  userEmail   String?       // email for anonymous users
+  userName    String?       // name for anonymous users
+  userPhone   String?       // phone for anonymous users
+  clientId    String?       // link to Client record
+  ticketId    String?       // link to Ticket record
+  status      ChatStatus    @default(ACTIVE)
+  source      String        @default("widget") // widget, page, mobile
+  metadata    Json?         // additional context
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  closedAt    DateTime?
+  
+  messages    ChatMessage[]
+  client      Client?       @relation(fields: [clientId], references: [id])
+  ticket      Ticket?       @relation(fields: [ticketId], references: [id])
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([clientId])
+  @@index([ticketId])
+}
+
+model ChatMessage {
+  id          String        @id @default(cuid())
+  sessionId   String
+  role        MessageRole   // user, assistant, system
+  content     String        @db.Text
+  confidence  Float?        // AI confidence score (0-1)
+  sources     Json?         // knowledge base sources used
+  metadata    Json?         // additional data (e.g., suggested actions)
+  isRead      Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  
+  session     ChatSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@index([sessionId])
+  @@index([role])
+  @@index([createdAt])
+}
+
+// Chat Analytics
+model ChatAnalytics {
+  id                  String   @id @default(cuid())
+  date                DateTime @unique
+  totalSessions       Int      @default(0)
+  totalMessages       Int      @default(0)
+  avgConfidence       Float?
+  avgSessionDuration  Float?   // in minutes
+  resolvedByAI        Int      @default(0)
+  escalatedToHuman    Int      @default(0)
+  topQuestions        Json?    // frequently asked questions
+  lowConfidenceTopics Json?    // topics needing improvement
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@index([date])
+}
+
+// Chat Enums
+enum ChatStatus {
+  ACTIVE
+  IDLE
+  CLOSED
+  ESCALATED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+// Widget Configuration
+model WidgetConfig {
+  id              String    @id @default(cuid())
+  appId           String    @unique
+  apiKey          String    @unique
+  name            String    // Nome da empresa/projeto
+  
+  // Domínios autorizados
+  allowedDomains  String[]  // ["example.com", "app.example.com"]
+  
+  // Personalização
+  primaryColor    String    @default("#2A65F9")
+  position        String    @default("bottom-right")
+  title           String    @default("Suporte")
+  subtitle        String    @default("Como podemos ajudar?")
+  welcomeMessage  String?   @db.Text
+  avatarUrl       String?   // URL do avatar do assistente
+  
+  // Configurações
+  isActive        Boolean   @default(true)
+  requireAuth     Boolean   @default(false)
+  collectName     Boolean   @default(true)
+  collectEmail    Boolean   @default(true)
+  collectPhone    Boolean   @default(true)
+  
+  // Analytics
+  totalSessions   Int       @default(0)
+  totalMessages   Int       @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  userId          String    // Quem criou
+  
+  user            User      @relation(fields: [userId], references: [id])
+  
+  @@index([appId])
+  @@index([apiKey])
+  @@index([userId])
 }

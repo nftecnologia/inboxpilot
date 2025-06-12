@@ -7,11 +7,12 @@ import { QueryProvider } from "@/components/providers/query-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { Toaster } from "@/components/ui/toaster"
+import { ChatWidget } from "@/components/chat-widget"
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "600"] })
 
 export const metadata: Metadata = {
-  title: "InboxPilot - Centralização e Automação de E-mails",
+  title: "Kirvano Suporte - Centralização e Automação de E-mails",
   description:
     "Centralize e automatize o atendimento via e-mail de suporte da sua empresa, utilizando IA para classificar e responder automaticamente.",
     generator: 'v0.dev'
@@ -38,10 +39,11 @@ export default function RootLayout({
               defaultTheme="light" 
               enableSystem={false} 
               disableTransitionOnChange
-              storageKey="inboxpilot-theme"
+              storageKey="kirvano-theme"
             >
               <ErrorBoundary>
                 {children}
+                <ChatWidget />
               </ErrorBoundary>
               <Toaster />
             </ThemeProvider>

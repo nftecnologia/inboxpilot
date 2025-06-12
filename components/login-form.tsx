@@ -58,7 +58,7 @@ export function LoginForm() {
 
       toast({
         title: "Login realizado",
-        description: "Bem-vindo ao InboxPilot!",
+        description: "Bem-vindo ao Kirvano Suporte!",
       })
 
       router.push("/dashboard")
@@ -78,9 +78,10 @@ export function LoginForm() {
     <div className="w-full max-w-sm mx-auto">
       {/* Logo em destaque com efeito sutil */}
       <div className="text-center mb-6">
-        <div className="inline-block relative">
-          <div className="absolute -inset-1 bg-blue-100 rounded-full blur-md opacity-70"></div>
-          <img src="/inboxpilot-logo.png" alt="InboxPilot" className="h-16 w-auto mx-auto relative z-10" />
+        <div className="relative inline-block">
+          <div className="absolute -inset-1 bg-blue-100 rounded-lg blur-md opacity-70"></div>
+          <h1 className="text-4xl font-bold text-blue-600 relative z-10 tracking-tight">KIRVANO</h1>
+          <p className="text-sm text-gray-600 mt-1 relative z-10">Suporte Inteligente</p>
         </div>
       </div>
 

@@ -95,7 +95,7 @@ export function ConfiguracoesWebhooks() {
         <CardHeader>
           <CardTitle className="text-2xl font-semibold text-[#0088FF] mb-1">Webhooks</CardTitle>
           <CardDescription className="text-sm text-gray-500">
-            Configure webhooks para integrar o InboxPilot com outros sistemas
+            Configure webhooks para integrar o Kirvano Suporte com outros sistemas
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

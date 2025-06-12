@@ -15,10 +15,15 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/emails/:path*",
+    "/chat/:path*",
+    "/tickets/:path*",
+    "/ia/:path*",
     "/base-conhecimento/:path*",
     "/configuracoes/:path*",
     "/relatorios/:path*",
     "/teste-ia/:path*",
     "/teste-base-conhecimento/:path*",
+    "/widget-config/:path*",
+    "/atendimento/:path*",
   ]
 }

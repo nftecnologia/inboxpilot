@@ -44,7 +44,24 @@ export async function GET(
       return NextResponse.json({ error: "Ticket não encontrado" }, { status: 404 })
     }
 
-    return NextResponse.json(ticket)
+    // Buscar sessão de chat relacionada (se houver)
+    const chatSession = await prisma.chatSession.findFirst({
+      where: { ticketId: params.id },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' }
+        }
+      }
+    })
+
+    // Incluir chatSession no response
+    const response = {
+      ...ticket,
+      chatSession
+    }
+    
+    return NextResponse.json(response)
 
   } catch (error) {
     console.error("Erro ao buscar ticket:", error)
@@ -55,8 +72,8 @@ export async function GET(
   }
 }
 
-// PUT /api/tickets/[id] - Atualizar ticket
-export async function PUT(
+// PATCH /api/tickets/[id] - Atualizar ticket
+export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
