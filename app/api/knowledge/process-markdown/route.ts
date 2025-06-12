@@ -3,9 +3,17 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import OpenAI from "openai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Verificar se estamos em ambiente de build
+const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.OPENAI_API_KEY;
+
+// Criar instância apenas se a variável estiver disponível
+let openai: OpenAI | null = null;
+
+if (!isBuildTime && process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
+}
 
 // Categorias disponíveis
 const categories = [
@@ -59,6 +67,17 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Sessão válida para: ${session.user?.email}`)
     console.log(`📄 Markdown processado: ${file.name}`)
     console.log(`📏 Tamanho: ${content.length} caracteres`)
+    
+    // Verificar se OpenAI está disponível
+    if (!openai) {
+      console.error('❌ OpenAI não está configurado')
+      // Retornar resposta básica sem IA
+      return NextResponse.json({
+        title: file.name.replace(/\.(md|markdown)$/, ''),
+        category: "Geral",
+        content: content
+      })
+    }
     
     // Usar OpenAI para analisar e categorizar o conteúdo
     const completion = await openai.chat.completions.create({
