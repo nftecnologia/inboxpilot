@@ -132,6 +132,11 @@ export function AppLayout({ children }: AppLayoutProps) {
       icon: LayoutDashboard,
     },
     {
+      name: "Emails",
+      path: "/emails",
+      icon: Mail,
+    },
+    {
       name: "Chat",
       path: "/chat",
       icon: MessageCircle,
