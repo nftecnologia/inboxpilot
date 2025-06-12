@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { MessageCircle, X, Send, Loader2, ChevronDown, UserCheck } from "lucide-react"
+import { MessageCircle, X, Send, Loader2, ChevronDown, ChevronUp, UserCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -60,6 +60,7 @@ export function ChatWidget({
     email: "",
     phone: "",
   })
+  const [showSuggestions, setShowSuggestions] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   
@@ -495,23 +496,42 @@ export function ChatWidget({
           </ScrollArea>
           )}
 
-          {/* Perguntas sugeridas */}
+          {/* Perguntas sugeridas com toggle */}
           {!showUserForm && suggestedQuestions.length > 0 && (
-            <div className="px-4 pb-2">
-              <p className="text-xs text-gray-500 mb-2">Perguntas sugeridas:</p>
-              <div className="flex flex-wrap gap-2">
-                {suggestedQuestions.map((question, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => sendMessage(question)}
-                  >
-                    {question}
-                  </Button>
-                ))}
+            <div className="border-t bg-gray-50">
+              <div className="px-4 py-2">
+                <button
+                  onClick={() => setShowSuggestions(!showSuggestions)}
+                  className="flex items-center justify-between w-full text-left hover:bg-gray-100 rounded-md px-2 py-1 transition-colors"
+                >
+                  <p className="text-xs text-gray-600 font-medium">
+                    Perguntas sugeridas ({suggestedQuestions.length})
+                  </p>
+                  {showSuggestions ? (
+                    <ChevronDown className="h-3 w-3 text-gray-400" />
+                  ) : (
+                    <ChevronUp className="h-3 w-3 text-gray-400" />
+                  )}
+                </button>
               </div>
+              
+              {showSuggestions && (
+                <div className="px-4 pb-3 animate-in slide-in-from-top-2 duration-200">
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedQuestions.map((question, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-all"
+                        onClick={() => sendMessage(question)}
+                      >
+                        {question}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
