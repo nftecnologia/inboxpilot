@@ -119,22 +119,16 @@ export async function POST(
   }
 }
 
-// GET - Buscar mensagens da sessão
+// GET - Buscar mensagens da sessão (permite acesso público para o widget)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
-    const session = await getServerSession(authOptions)
     
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: "Não autorizado" },
-        { status: 401 }
-      )
-    }
-
+    // Permitir acesso público às mensagens da própria sessão
+    // O widget precisa acessar sem autenticação
     const messages = await prisma.chatMessage.findMany({
       where: { sessionId: id },
       orderBy: { createdAt: "asc" }
