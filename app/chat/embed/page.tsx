@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { ChatWidget } from "@/components/chat-widget"
 
-export default function ChatEmbedPage() {
+function ChatEmbedContent() {
   const searchParams = useSearchParams()
   const [config, setConfig] = useState<any>({})
   
@@ -114,5 +114,13 @@ export default function ChatEmbedPage() {
         }}
       />
     </div>
+  )
+}
+
+export default function ChatEmbedPage() {
+  return (
+    <Suspense fallback={<div className="h-screen flex items-center justify-center">Carregando...</div>}>
+      <ChatEmbedContent />
+    </Suspense>
   )
 }
