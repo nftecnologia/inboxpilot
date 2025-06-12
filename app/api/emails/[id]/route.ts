@@ -8,6 +8,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
@@ -19,7 +20,7 @@ export async function GET(
 
     const email = await prisma.email.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
     })
@@ -46,6 +47,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
@@ -60,7 +62,7 @@ export async function PUT(
 
     const email = await prisma.email.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
     })
@@ -73,7 +75,7 @@ export async function PUT(
     }
 
     const updatedEmail = await prisma.email.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(status && { status }),
         ...(typeof isRead === "boolean" && { isRead }),
@@ -101,6 +103,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.id) {
@@ -112,7 +115,7 @@ export async function DELETE(
 
     const email = await prisma.email.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
     })
@@ -125,7 +128,7 @@ export async function DELETE(
     }
 
     await prisma.email.delete({
-      where: { id: params.id },
+      where: { id: id },
     })
 
     return NextResponse.json({ 

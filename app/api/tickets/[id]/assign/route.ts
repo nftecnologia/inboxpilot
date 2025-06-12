@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma"
 // POST - Assumir ticket
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -31,7 +31,7 @@ export async function POST(
 
     // Verificar se o ticket existe
     const ticket = await prisma.ticket.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         assignee: true
       }
@@ -54,7 +54,7 @@ export async function POST(
 
     // Atribuir ticket ao usuário
     const updatedTicket = await prisma.ticket.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         assigneeId: user.id,
         status: ticket.status === "OPEN" ? "IN_PROGRESS" : ticket.status,
@@ -69,7 +69,7 @@ export async function POST(
     // Criar interação de atribuição
     await prisma.interaction.create({
       data: {
-        ticketId: params.id,
+        ticketId: id,
         type: "NOTE",
         content: `Ticket assumido por ${user.name || user.email}`,
         userId: user.id,
@@ -93,7 +93,7 @@ export async function POST(
 // DELETE - Desatribuir ticket
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -118,7 +118,7 @@ export async function DELETE(
 
     // Verificar se o ticket existe e está atribuído ao usuário
     const ticket = await prisma.ticket.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!ticket) {
@@ -137,7 +137,7 @@ export async function DELETE(
 
     // Desatribuir ticket
     const updatedTicket = await prisma.ticket.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         assigneeId: null,
         updatedAt: new Date()
@@ -147,7 +147,7 @@ export async function DELETE(
     // Criar interação de desatribuição
     await prisma.interaction.create({
       data: {
-        ticketId: params.id,
+        ticketId: id,
         type: "NOTE",
         content: `Ticket desatribuído por ${user.name || user.email}`,
         userId: user.id,

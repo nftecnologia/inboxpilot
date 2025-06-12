@@ -6,9 +6,10 @@ import { prisma } from "@/lib/prisma"
 // POST - Adicionar interação ao ticket
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -41,7 +42,7 @@ export async function POST(
 
     // Verificar se o ticket existe
     const ticket = await prisma.ticket.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     if (!ticket) {
@@ -54,7 +55,7 @@ export async function POST(
     // Criar interação
     const interaction = await prisma.interaction.create({
       data: {
-        ticketId: params.id,
+        ticketId: id,
         type: type === "RESPONSE" ? "NOTE" : "NOTE",
         content,
         userId: user.id,
@@ -65,7 +66,7 @@ export async function POST(
     // Atualizar status do ticket se necessário
     if (ticket.status === "OPEN") {
       await prisma.ticket.update({
-        where: { id: params.id },
+        where: { id: id },
         data: { 
           status: "IN_PROGRESS",
           updatedAt: new Date()
@@ -91,9 +92,10 @@ export async function POST(
 // GET - Listar interações do ticket
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions)
     
     if (!session?.user?.email) {
@@ -104,7 +106,7 @@ export async function GET(
     }
 
     const interactions = await prisma.interaction.findMany({
-      where: { ticketId: params.id },
+      where: { ticketId: id },
       orderBy: { createdAt: "desc" },
       include: {
         user: {

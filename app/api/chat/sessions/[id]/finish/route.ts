@@ -7,7 +7,7 @@ import { getIO } from "@/lib/socket"
 // POST - Finalizar um chat
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -32,7 +32,7 @@ export async function POST(
 
     // Verificar se a sessão existe
     const chatSession = await prisma.chatSession.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         ticket: true
       }
@@ -47,7 +47,7 @@ export async function POST(
 
     // Atualizar status da sessão para CLOSED
     const updatedSession = await prisma.chatSession.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         status: "CLOSED",
         closedAt: new Date(),
@@ -68,7 +68,7 @@ export async function POST(
     // Adicionar mensagem de sistema informando que o chat foi finalizado
     await prisma.chatMessage.create({
       data: {
-        sessionId: params.id,
+        sessionId: id,
         role: "SYSTEM",
         content: "Chat finalizado pelo atendente",
         metadata: {
@@ -104,8 +104,8 @@ export async function POST(
     const io = getIO()
     if (io) {
       // Notificar o cliente que o chat foi finalizado
-      io.to(`chat:${params.id}`).emit("chat:finished", {
-        sessionId: params.id,
+      io.to(`chat:${id}`).emit("chat:finished", {
+        sessionId: id,
         agent: {
           id: user.id,
           name: user.name
@@ -114,7 +114,7 @@ export async function POST(
 
       // Notificar outros atendentes
       io.emit("chat:status_changed", {
-        sessionId: params.id,
+        sessionId: id,
         status: "CLOSED",
         closedBy: user.id
       })

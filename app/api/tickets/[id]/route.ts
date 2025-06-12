@@ -7,16 +7,17 @@ import { type UpdateTicketData } from "@/types/crm"
 // GET /api/tickets/[id] - Buscar ticket específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
     const ticket = await prisma.ticket.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         client: true,
         assignee: {
@@ -46,7 +47,7 @@ export async function GET(
 
     // Buscar sessão de chat relacionada (se houver)
     const chatSession = await prisma.chatSession.findFirst({
-      where: { ticketId: params.id },
+      where: { ticketId: id },
       orderBy: { createdAt: 'desc' },
       include: {
         messages: {
@@ -75,9 +76,10 @@ export async function GET(
 // PATCH /api/tickets/[id] - Atualizar ticket
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
@@ -87,7 +89,7 @@ export async function PATCH(
 
     // Verificar se ticket existe
     const existingTicket = await prisma.ticket.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { client: true }
     })
 
@@ -127,7 +129,7 @@ export async function PATCH(
 
     // Atualizar ticket
     const ticket = await prisma.ticket.update({
-      where: { id: params.id },
+      where: { id: id },
       data: updateData,
       include: {
         client: true,
@@ -189,9 +191,10 @@ export async function PATCH(
 // DELETE /api/tickets/[id] - Deletar ticket
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
@@ -208,7 +211,7 @@ export async function DELETE(
 
     // Verificar se ticket existe
     const ticket = await prisma.ticket.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { client: true }
     })
 
@@ -218,7 +221,7 @@ export async function DELETE(
 
     // Deletar ticket (cascata deleta interações e tags)
     await prisma.ticket.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     // Decrementar contador de tickets do cliente

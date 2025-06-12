@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma"
 // PATCH - Atualizar configuração
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -32,7 +32,7 @@ export async function PATCH(
     // Verificar se a configuração pertence ao usuário
     const existingConfig = await prisma.widgetConfig.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id
       }
     })
@@ -48,7 +48,7 @@ export async function PATCH(
     
     // Atualizar configuração
     const updatedConfig = await prisma.widgetConfig.update({
-      where: { id: params.id },
+      where: { id: id },
       data: body
     })
 
@@ -65,7 +65,7 @@ export async function PATCH(
 // DELETE - Remover configuração
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -91,7 +91,7 @@ export async function DELETE(
     // Verificar se a configuração pertence ao usuário
     const existingConfig = await prisma.widgetConfig.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id
       }
     })
@@ -105,7 +105,7 @@ export async function DELETE(
 
     // Deletar configuração
     await prisma.widgetConfig.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     return NextResponse.json({ success: true })
