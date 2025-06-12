@@ -61,19 +61,45 @@ export function ChatWidget({
     phone: "",
   })
   const [showSuggestions, setShowSuggestions] = useState(true)
+  const [userScrolledUp, setUserScrolledUp] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   
   const socket = useSocket()
 
-  // Auto-scroll para última mensagem
+  // Auto-scroll para última mensagem apenas se o usuário não estiver lendo o histórico
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (!userScrolledUp) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
   }
 
+  // Detectar quando o usuário faz scroll manual
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const element = e.currentTarget
+    const scrollTop = element.scrollTop
+    const scrollHeight = element.scrollHeight
+    const clientHeight = element.clientHeight
+    
+    // Se o usuário não está no final da conversa (com margem de 100px)
+    if (scrollHeight - scrollTop - clientHeight > 100) {
+      setUserScrolledUp(true)
+    } else {
+      setUserScrolledUp(false)
+    }
+  }
+
+  // Auto-scroll apenas quando não está navegando
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Resetar o scroll quando envia mensagem
+  const resetScroll = () => {
+    setUserScrolledUp(false)
+    setTimeout(scrollToBottom, 100)
+  }
 
   // Não criar sessão automaticamente - aguardar dados do usuário
 
@@ -197,6 +223,9 @@ export function ChatWidget({
     setInput("")
     setIsLoading(true)
     setSuggestedQuestions([])
+    
+    // Voltar ao final quando envia mensagem
+    resetScroll()
 
     try {
       const response = await fetch("/api/chat", {
@@ -396,7 +425,25 @@ export function ChatWidget({
             </form>
           ) : (
           /* Área de mensagens */
-          <ScrollArea className="flex-1 p-4 bg-gray-50">
+          <ScrollArea 
+            className="flex-1 p-4 bg-gray-50 relative"
+            onScroll={handleScroll}
+            ref={scrollAreaRef}
+          >
+            {/* Indicador de novas mensagens */}
+            {userScrolledUp && (
+              <button
+                onClick={() => {
+                  setUserScrolledUp(false)
+                  scrollToBottom()
+                }}
+                className="absolute bottom-4 right-4 bg-blue-500 text-white rounded-full px-3 py-2 shadow-lg flex items-center gap-2 text-sm hover:bg-blue-600 transition-all z-10"
+              >
+                <ChevronDown className="h-4 w-4" />
+                Novas mensagens
+              </button>
+            )}
+            
             <div className="space-y-3">
               {messages.map((message) => (
                 <div
