@@ -1,14 +1,26 @@
 import { Pinecone, PineconeRecord } from '@pinecone-database/pinecone';
 import OpenAI from 'openai';
 
-// Inicializar clientes
-const pinecone = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY!,
-});
+// Verificar se estamos em ambiente de build
+const isBuildTime = process.env.NODE_ENV === 'production' && (!process.env.PINECONE_API_KEY || !process.env.OPENAI_API_KEY);
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+// Criar instâncias apenas se as variáveis estiverem disponíveis
+let pinecone: Pinecone | null = null;
+let openai: OpenAI | null = null;
+
+if (!isBuildTime) {
+  if (process.env.PINECONE_API_KEY) {
+    pinecone = new Pinecone({
+      apiKey: process.env.PINECONE_API_KEY,
+    });
+  }
+  
+  if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+}
 
 const INDEX_NAME = process.env.PINECONE_INDEX_NAME || 'knowledge-base';
 
@@ -24,6 +36,14 @@ interface DocumentMetadata {
 
 // Gerar embedding para texto usando OpenAI
 export async function generateEmbedding(text: string): Promise<number[]> {
+  if (!openai) {
+    if (isBuildTime) {
+      console.warn('⚠️ OpenAI não configurado durante build');
+      return new Array(1536).fill(0); // Embedding vazio para build time
+    }
+    throw new Error('OpenAI não configurado - verifique OPENAI_API_KEY');
+  }
+  
   try {
     const response = await openai.embeddings.create({
       model: "text-embedding-3-small",
@@ -45,6 +65,14 @@ export async function indexDocument(
   category: string,
   userId?: string
 ): Promise<void> {
+  if (!pinecone) {
+    if (isBuildTime) {
+      console.warn('⚠️ Pinecone não configurado durante build');
+      return;
+    }
+    throw new Error('Pinecone não configurado - verifique PINECONE_API_KEY');
+  }
+  
   try {
     const index = pinecone.index(INDEX_NAME);
     
@@ -91,6 +119,14 @@ export async function updateDocument(
 
 // Deletar documento do Pinecone
 export async function deleteDocument(id: string): Promise<void> {
+  if (!pinecone) {
+    if (isBuildTime) {
+      console.warn('⚠️ Pinecone não configurado durante build');
+      return;
+    }
+    throw new Error('Pinecone não configurado - verifique PINECONE_API_KEY');
+  }
+  
   try {
     const index = pinecone.index(INDEX_NAME);
     await index.deleteOne(id);
@@ -114,6 +150,14 @@ export async function searchSimilarDocuments(
   category: string;
   content: string;
 }>> {
+  if (!pinecone) {
+    if (isBuildTime) {
+      console.warn('⚠️ Pinecone não configurado durante build');
+      return [];
+    }
+    throw new Error('Pinecone não configurado - verifique PINECONE_API_KEY');
+  }
+  
   try {
     const index = pinecone.index(INDEX_NAME);
     
@@ -192,6 +236,14 @@ export async function getRelevantContext(
 
 // Verificar se o índice existe e criar se necessário
 export async function ensureIndexExists(): Promise<void> {
+  if (!pinecone) {
+    if (isBuildTime) {
+      console.warn('⚠️ Pinecone não configurado durante build');
+      return;
+    }
+    throw new Error('Pinecone não configurado - verifique PINECONE_API_KEY');
+  }
+  
   try {
     const indexes = await pinecone.listIndexes();
     const indexExists = indexes.indexes?.some(idx => idx.name === INDEX_NAME);
@@ -226,6 +278,14 @@ export async function ensureIndexExists(): Promise<void> {
 
 // Função para testar a conexão
 export async function testPineconeConnection(): Promise<boolean> {
+  if (!pinecone) {
+    if (isBuildTime) {
+      console.warn('⚠️ Pinecone não configurado durante build');
+      return false;
+    }
+    throw new Error('Pinecone não configurado - verifique PINECONE_API_KEY');
+  }
+  
   try {
     const indexes = await pinecone.listIndexes();
     console.log('✅ Conexão com Pinecone estabelecida');

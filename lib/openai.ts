@@ -3,14 +3,28 @@ import { openai } from "@ai-sdk/openai"
 import { buscarConhecimentoRelevante, formatarConhecimentoParaIA } from "./knowledge-search"
 import { getRelevantContext } from "./pinecone"
 
+// Verificar se estamos em ambiente de build
+const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.OPENAI_API_KEY;
+
+// Função auxiliar para verificar OpenAI
+function checkOpenAI() {
+  if (!process.env.OPENAI_API_KEY) {
+    if (isBuildTime) {
+      console.warn("⚠️ OPENAI_API_KEY não configurada durante build - funcionalidades de IA estarão desabilitadas");
+      return false;
+    }
+    throw new Error("OPENAI_API_KEY não configurada - configure nas variáveis de ambiente");
+  }
+  return true;
+}
+
 // Função para analisar o conteúdo do e-mail e categorizar
 export async function analisarEmail(assunto: string, corpo: string) {
   console.log("🔍 analisarEmail chamada com:", { assunto, corpo })
 
   // Verificar se a API key está configurada
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("❌ OPENAI_API_KEY não configurada")
-    throw new Error("OPENAI_API_KEY não configurada")
+  if (!checkOpenAI()) {
+    return "Geral"; // Retorna categoria padrão durante build
   }
 
   const prompt = `
